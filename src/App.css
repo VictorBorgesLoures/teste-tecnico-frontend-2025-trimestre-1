@@ -1,0 +1,12 @@
+.table-header {
+    border-radius: .5em !important;
+    transition: .2s ease;
+}
+
+.table-header:hover {
+    background-image: linear-gradient(transparent, lightgray);
+}
+
+.table-header-active {
+    background-color: lightgray !important;     
+}
