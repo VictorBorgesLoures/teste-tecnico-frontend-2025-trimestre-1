@@ -29,8 +29,14 @@ const defaultFilter: filter = {
 
 function App() {
   let userManager = new UserManager()
-  
-  let [users, changeUsersList] = useState(userManager.get().users)
+  let currentUsers: User[] = []
+  try {
+    currentUsers = userManager.get().users
+  } catch(e) {
+    userManager.clearCache()
+    toast.info("Limpando cache... Usuários inválidos fora encontrados")
+  }  
+  let [users, changeUsersList] = useState(currentUsers)
   let [tableFilter, changeFilter] = useState(defaultFilter) 
   let [formUsername, setUserName] = useState("")
   let [formAddressName, setAddressName] = useState("")
@@ -80,14 +86,20 @@ function App() {
 
   function handleSave(e: MouseEvent<HTMLImageElement, globalThis.MouseEvent>, userId: number) {
     e.preventDefault()
-    let index = users.findIndex(u => u.id == userId)
-    if(!userManager.alreadyHasUser(new User(users[index].name, users[index].address, users[index].id))) {
-      let userIndexManager = userManager.users.findIndex(u => u.id == userId)
-      userManager.users[userIndexManager] = users[index]
-      userManager.save()
-      toast.success("Modificações no usuário foram salvas!")
-    } else {
-      toast.warn("Um usuário já existe com os mesmos dados.")
+    try {
+      let index = users.findIndex(u => u.id == userId)
+      let u = users[index]
+      u.address.setAddressName(u.address.name)
+      if(!userManager.alreadyHasUser(u)) {
+        let userIndexManager = userManager.users.findIndex(u => u.id == userId)
+        userManager.users[userIndexManager] = users[index]
+        userManager.save()
+        toast.success("Modificações no usuário foram salvas!")
+      } else {
+        toast.warn("Um usuário já existe com os mesmos dados.")
+      }
+    } catch(e) {
+      toast.warning((e as Error).message)
     }
   }
 
@@ -237,7 +249,7 @@ function App() {
                 <td><img src={saveIcon} data-user-id={user.id} className="btn btn-light"
                   onClick={(e) =>  toastConfirmation(({ closeToast }: ToastContentProps) => {
                     return (<div>
-                      <p>Você deseja salvar?</p>
+                      <p>Você deseja salvar o usuário com id {user.id+1}?</p>
                       <button className="btn m-2 btn-success" onClick={() => closeToast(true)}>Salvar</button>
                       <button className="btn btn-primary" onClick={() => closeToast(false)}>Ignorar</button>
                     </div>)
@@ -257,7 +269,7 @@ function App() {
                   className="btn btn-danger"
                   onClick={(e) =>  toastConfirmation(({ closeToast }: ToastContentProps) => {
                     return (<div>
-                      <p>Confirmar exclusão de usuário?</p>
+                      <p>Confirmar exclusão do usuário com id {user.id+1}?</p>
                       <button className="btn m-2 btn-danger" onClick={() => closeToast(true)}>Deletar</button>
                       <button className="btn btn-primary" onClick={() => closeToast(false)}>Ignorar</button>
                     </div>)

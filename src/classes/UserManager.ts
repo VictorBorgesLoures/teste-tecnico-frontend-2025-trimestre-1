@@ -1,4 +1,6 @@
 import User from "@src/classes/User";
+import CEP from "./CEP";
+import Address from "./Address";
 
 export default class UserManager {
 
@@ -14,7 +16,7 @@ export default class UserManager {
         return false
     }
 
-    alreadyHasUser(user: User) {
+    alreadyHasUser(user: User): User | undefined {
         return this.users.find((currentUser => {
             return user.isEqual(currentUser)
         }))
@@ -37,11 +39,19 @@ export default class UserManager {
             this.users = []
         else {
             this.users = JSON.parse(usersString)
+            this.users = this.users.map(u => {
+                return new User(u.name, new Address(u.address.name, new CEP(u.address.cep.cep), u.address), u.id)
+            })
         }
         return this
     }
 
     save() {
         localStorage.setItem('users', JSON.stringify(this.users))
+        return this
+    }
+
+    clearCache() {
+        localStorage.removeItem('users')
     }
 }
